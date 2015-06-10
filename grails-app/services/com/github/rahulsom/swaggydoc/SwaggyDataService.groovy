@@ -160,13 +160,17 @@ class SwaggyDataService {
         // These preserve the path components supporting hierarchical paths discovered through URL mappings
         List<String> resourcePathParts
         List<Parameter> resourcePathParams
-        Map<String, MethodDocumentation> apis = grailsUrlMappingsHolder.
+        Map<String, MethodDocumentation> apis = grailsUrlMappingsHolder.        // TODO marker
                 urlMappings.
-                findAll { it.controllerName == controllerName }.
+                findAll {
+                    it.controllerName == controllerName
+                    log.debug("It: " + it)
+                }.
                 collectEntries { mapping ->
 
-                    log.debug("Mapping: $mapping")
+                    log.debug("Mapping: " + mapping)
                     def paths = populatePaths(mapping)
+                    log.debug("Paths: " + paths)
                     List<String> pathParts = paths.left
                     List<Parameter> pathParams = paths.right
                     // Capture resource path candidates
@@ -177,12 +181,13 @@ class SwaggyDataService {
 
                     def actionMethod = DefaultActionComponents.get(mapping.actionName)
                     DefaultAction defaults = (actionMethod ?: actionFallback)(domainName)
-                    log.debug "defaults?.parameters: ${defaults?.parameters}"
-                    log.debug "pathParams: ${pathParams}"
+                    log.debug "defaults?.parameters: ${defaults?.parameters}, Action: ${mapping.actionName}, Defaults: ${defaults}"
+                    log.debug "pathParams: ${pathParams}, pathParts=${pathParts}"
                     List<Parameter> parameters = (defaults?.parameters?.clone() ?: []) + pathParams
                     if (pathParts[-1] != "{id}") {
                         // Special case: defaults may include 'id' for single resource paths
                         parameters.removeAll { it.name == 'id' }
+                        log.debug "removed id"
                     }
                     [
                             mapping.actionName,
@@ -311,7 +316,7 @@ class SwaggyDataService {
 
     @GrailsCompileStatic
     @SuppressWarnings("GrMethodMayBeStatic")
-    private Pair<List<String>, List<Parameter>> populatePaths(UrlMapping mapping) {
+    private Pair<List<String>, List<Parameter>> populatePaths(UrlMapping mapping) {     // TODO: marker
         List<Parameter> pathParams = []
         List<String> pathParts = []
         def constraintIdx = 0
@@ -325,8 +330,10 @@ class SwaggyDataService {
                     // Don't push 'id' as it is one of the default pathParams
                     pathParams.push(makePathParam(param))
                 }
+                log.debug "Mapping: {${param}}"
                 pathParts.push("{" + param + "}")
             } else {
+                log.debug "NoMatch: ${token}"
                 pathParts.push(token)
             }
         }
@@ -568,6 +575,7 @@ class SwaggyDataService {
         ] as Operation[])
     }
 
+    // TODO marker
     private List<MethodDocumentation> documentMethodWithSwaggerAnnotations(Method method, GrailsClass theController, Set<Class> modelTypes) {
         def basePath = grailsLinkGenerator.link(uri: '')
         def apiOperation = findAnnotation(ApiOperation, method)
