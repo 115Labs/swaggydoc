@@ -51,4 +51,5 @@ swaggydoc {
     termsOfServiceUrl = "http://helloreverb.com/terms/"
     title = "Swaggydoc Demo App"
     apiVersion = "1.0"
+    apiBasePath = ""                // if set, this is the explicit base API path used when building the docs for easier readability when using custom URL mapping paths
 }

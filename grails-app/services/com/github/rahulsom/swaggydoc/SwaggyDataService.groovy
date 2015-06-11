@@ -117,6 +117,9 @@ class SwaggyDataService {
     @GrailsCompileStatic
     private String getApiVersion() { config.apiVersion ?: grailsApplication.metadata['app.version'] }
 
+    @GrailsCompileStatic
+    private String getApiBasePath() { config.apiBasePath ?: grailsLinkGenerator.link(uri: '') }
+
     /**
      * Generates map of Swagger Resources.
      * @return Map
@@ -153,7 +156,7 @@ class SwaggyDataService {
         Api api = getApi(theController)
 
         def absoluteBasePath = grailsLinkGenerator.link(uri: '', absolute: true)
-        def basePath = grailsLinkGenerator.link(uri: '')
+        def basePath = apiBasePath
         def resourcePath = grailsLinkGenerator.link(controller: theController.logicalPropertyName)
         def domainName = slugToDomain(controllerName)
 
@@ -290,13 +293,17 @@ class SwaggyDataService {
                 values().
                 groupBy { MethodDocumentation it -> it.path }.
                 collect { path, methodDocs ->
+                    if (apiBasePath) {
+                        log.debug("apiBasePath: path=${path}, apiBasePath=${apiBasePath}, newPath=${path - apiBasePath}, api.basePath=${api?.basePath()}, absoluteBasePath=${absoluteBasePath}, resourcePath=${resourcePath}, basePath=${basePath}")
+                        path = path - apiBasePath
+                    }
                     new MethodDocumentation(path, null, methodDocs*.operations.flatten().unique() as Operation[])
                 }
 
         return new ControllerDefinition(
                 apiVersion: apiVersion,
                 swaggerVersion: SwaggerVersion,
-                basePath: api?.basePath() ?: absoluteBasePath,
+                basePath: api?.basePath() ?: absoluteBasePath + apiBasePath,
                 resourcePath: resourcePath - basePath,
                 produces: api?.produces()?.tokenize(',') ?: responseContentTypes(theControllerClazz),
                 consumes: api?.consumes()?.tokenize(',') ?: DefaultRequestContentTypes,
