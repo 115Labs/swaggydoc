@@ -158,19 +158,17 @@ class SwaggyDataService {
         def domainName = slugToDomain(controllerName)
 
         // These preserve the path components supporting hierarchical paths discovered through URL mappings
+        log.debug("apiDetails(): collectEntries: UrlMappings: " + grailsUrlMappingsHolder.urlMappings)
         List<String> resourcePathParts
         List<Parameter> resourcePathParams
         Map<String, MethodDocumentation> apis = grailsUrlMappingsHolder.        // TODO marker
                 urlMappings.
-                findAll {
-                    it.controllerName == controllerName
-                    log.debug("It: " + it)
-                }.
+                findAll { it.controllerName == controllerName }.
                 collectEntries { mapping ->
+                    log.debug("apiDetails(): collectEntries: controllerName: " + controllerName)
 
-                    log.debug("Mapping: " + mapping)
                     def paths = populatePaths(mapping)
-                    log.debug("Paths: " + paths)
+                    log.debug("apiDetails(): collectEntries: Mapping: " + mapping + ", Paths: " + paths)
                     List<String> pathParts = paths.left
                     List<Parameter> pathParams = paths.right
                     // Capture resource path candidates
@@ -181,13 +179,12 @@ class SwaggyDataService {
 
                     def actionMethod = DefaultActionComponents.get(mapping.actionName)
                     DefaultAction defaults = (actionMethod ?: actionFallback)(domainName)
-                    log.debug "defaults?.parameters: ${defaults?.parameters}, Action: ${mapping.actionName}, Defaults: ${defaults}"
-                    log.debug "pathParams: ${pathParams}, pathParts=${pathParts}"
+                    log.debug "apiDetails(): collectEntries: defaults?.parameters: ${defaults?.parameters}, Action: ${mapping.actionName}, Defaults: ${defaults}, pathParams: ${pathParams}, pathParts=${pathParts}"
                     List<Parameter> parameters = (defaults?.parameters?.clone() ?: []) + pathParams
                     if (pathParts[-1] != "{id}") {
                         // Special case: defaults may include 'id' for single resource paths
                         parameters.removeAll { it.name == 'id' }
-                        log.debug "removed id"
+                        log.debug "apiDetails(): collectEntries: parameters.removeAll"
                     }
                     [
                             mapping.actionName,
@@ -320,10 +317,11 @@ class SwaggyDataService {
         List<Parameter> pathParams = []
         List<String> pathParts = []
         def constraintIdx = 0
-        log.debug "Tokens for mapping: ${mapping.urlData.tokens}"
+        log.debug "Tokens for mapping: ${mapping.urlData.tokens}, constraints=${mapping.constraints}"
         mapping.urlData.tokens.eachWithIndex { String token, int idx ->
             if (token.matches(/^\(.*[\*\+]+.*\)$/)) {
-                def param = (idx == mapping.urlData.tokens.size() - 1) ? 'id' :
+                // check the url mapping constraints for the properties in the order that they appear
+                def param = (constraintIdx >= mapping.constraints.size()) ? 'id' :
                         mapping.constraints[constraintIdx]?.propertyName
                 constraintIdx++
                 if (param != 'id') {
@@ -337,8 +335,7 @@ class SwaggyDataService {
                 pathParts.push(token)
             }
         }
-        log.debug "PathParts: ${pathParts}"
-        log.debug "PathParams: ${pathParams}"
+        log.debug "PathParts: ${pathParts}, PathParams: ${pathParams}"
         new Pair(pathParts, pathParams)
     }
 
