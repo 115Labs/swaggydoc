@@ -7,9 +7,9 @@ class UrlMappings {
             }
         }
 
-        "/albums"(resources: 'album') {
-            "/photos"(resources: "photo")
-        }
+//        "/albums"(resources: 'album') {
+//            "/photos"(resources: "photo")
+//        }
 
         "/"(view: "/index")
         "500"(view: '/error')
