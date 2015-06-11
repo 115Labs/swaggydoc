@@ -161,7 +161,7 @@ class SwaggyDataService {
         log.debug("apiDetails(): collectEntries: UrlMappings: " + grailsUrlMappingsHolder.urlMappings)
         List<String> resourcePathParts
         List<Parameter> resourcePathParams
-        Map<String, MethodDocumentation> apis = grailsUrlMappingsHolder.        // TODO marker
+        Map<String, MethodDocumentation> apis = grailsUrlMappingsHolder.
                 urlMappings.
                 findAll { it.controllerName == controllerName }.
                 collectEntries { mapping ->
@@ -313,7 +313,7 @@ class SwaggyDataService {
 
     @GrailsCompileStatic
     @SuppressWarnings("GrMethodMayBeStatic")
-    private Pair<List<String>, List<Parameter>> populatePaths(UrlMapping mapping) {     // TODO: marker
+    private Pair<List<String>, List<Parameter>> populatePaths(UrlMapping mapping) {
         List<Parameter> pathParams = []
         List<String> pathParts = []
         def constraintIdx = 0
@@ -331,7 +331,6 @@ class SwaggyDataService {
                 log.debug "Mapping: {${param}}"
                 pathParts.push("{" + param + "}")
             } else {
-                log.debug "NoMatch: ${token}"
                 pathParts.push(token)
             }
         }
@@ -572,7 +571,6 @@ class SwaggyDataService {
         ] as Operation[])
     }
 
-    // TODO marker
     private List<MethodDocumentation> documentMethodWithSwaggerAnnotations(Method method, GrailsClass theController, Set<Class> modelTypes) {
         def basePath = grailsLinkGenerator.link(uri: '')
         def apiOperation = findAnnotation(ApiOperation, method)
